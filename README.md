@@ -98,6 +98,7 @@ buraco-zero/
 ```
 
 * ✨ Funcionalidades Atuais
+  
 📝 Formulário Dinâmico: Cadastro intuitivo com campos de bairro, nível de gravidade e descrição.
 
 📈 Painel de Indicadores: Métricas em tempo real do total de ocorrências e pontuação coletiva.
@@ -108,6 +109,7 @@ buraco-zero/
 
 
 * 🔮 Próximos Passos
+  
 📍 Geolocalización Automática (GPS): Captura precisa da localização do usuário.
 
 🗺️ Mapa Interativo: Visualização geográfica dos pontos críticos da cidade via mapas.
