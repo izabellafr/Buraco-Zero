@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Buraco Zero{% endblock %}</title>
+    <meta name="description" content="Sistema colaborativo de registro de ocorrências na pavimentação urbana de Campo Grande/MS.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <a class="skip-link" href="#conteudo-principal">Pular para o conteúdo principal</a>
+
+    <header class="site-header">
+        <div class="site-header__brand">
+            <span class="site-header__mark" aria-hidden="true"></span>
+            <div>
+                <p class="site-header__eyebrow">Campo Grande / MS</p>
+                <h1 class="site-header__title">Buraco Zero</h1>
+            </div>
+        </div>
+        <p class="site-header__tagline">Registro colaborativo de buracos e falhas na pavimentação urbana</p>
+    </header>
+
+    <main id="conteudo-principal">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alertas" role="status" aria-live="polite">
+                    {% for categoria, mensagem in messages %}
+                        <p class="alerta alerta--{{ categoria }}">{{ mensagem }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <p>Projeto de Extensão UFMS Digital (95DX7.200525) — Projeto Integrador de Tecnologia da Informação II</p>
+    </footer>
+</body>
+</html>

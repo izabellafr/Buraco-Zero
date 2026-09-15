@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Buraco Zero — Registrar ocorrência{% endblock %}
+
+{% block content %}
+<div class="layout">
+
+    <section class="painel-registro" aria-labelledby="titulo-registro">
+        <h2 id="titulo-registro">Registrar ocorrência</h2>
+        <p class="painel-registro__ajuda">
+            Encontrou um buraco ou falha na via? Registre em poucos segundos.
+        </p>
+
+        <form action="{{ url_for('registrar') }}" method="post" novalidate>
+            <div class="campo">
+                <label for="bairro">Bairro</label>
+                <select id="bairro" name="bairro" required>
+                    <option value="" disabled selected>Selecione o bairro</option>
+                    {% for b in bairros %}
+                        <option value="{{ b }}">{{ b }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <fieldset class="campo">
+                <legend>Nível de gravidade</legend>
+                {% for g in gravidades %}
+                    <label class="opcao-radio">
+                        <input type="radio" name="gravidade" value="{{ g }}" required>
+                        <span>{{ g }}</span>
+                    </label>
+                {% endfor %}
+            </fieldset>
+
+            <div class="campo">
+                <label for="descricao">Descrição do problema</label>
+                <textarea id="descricao" name="descricao" rows="4"
+                          placeholder="Ex.: buraco grande próximo à esquina, causando desvio de veículos."
+                          required></textarea>
+            </div>
+
+            <button type="submit" class="botao-primario">Registrar ocorrência</button>
+        </form>
+    </section>
+
+    <section class="painel-resultados" aria-labelledby="titulo-resultados">
+        <h2 id="titulo-resultados" class="sr-only">Ocorrências e indicadores da comunidade</h2>
+
+        <div class="indicadores" role="group" aria-label="Indicadores da comunidade">
+            <div class="indicador">
+                <span class="indicador__valor">{{ total_ocorrencias }}</span>
+                <span class="indicador__rotulo">Ocorrências registradas</span>
+            </div>
+            <div class="indicador indicador--destaque">
+                <span class="indicador__valor">{{ pontuacao_total }}</span>
+                <span class="indicador__rotulo">Pontuação da comunidade</span>
+            </div>
+        </div>
+
+        <div class="grafico-gravidade" aria-hidden="true">
+            {% set max_valor = por_gravidade.values() | max %}
+            {% for gravidade, quantidade in por_gravidade.items() %}
+                <div class="barra">
+                    <div class="barra__coluna" style="--altura: {{ (quantidade / max_valor * 100) if max_valor else 0 }}%;">
+                        <span class="barra__valor">{{ quantidade }}</span>
+                    </div>
+                    <span class="barra__rotulo">{{ gravidade }}</span>
+                </div>
+            {% endfor %}
+        </div>
+        <p class="sr-only">
+            Distribuição por gravidade:
+            {% for gravidade, quantidade in por_gravidade.items() %}{{ gravidade }}: {{ quantidade }}{% if not loop.last %}, {% endif %}{% endfor %}.
+        </p>
+
+        <h3>Ocorrências recentes</h3>
+        {% if ocorrencias %}
+            <table class="tabela-ocorrencias">
+                <caption class="sr-only">Lista de ocorrências registradas pela comunidade</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Data</th>
+                        <th scope="col">Bairro</th>
+                        <th scope="col">Gravidade</th>
+                        <th scope="col">Descrição</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for oc in ocorrencias %}
+                    <tr>
+                        <td data-rotulo="Data">{{ oc.data_hora }}</td>
+                        <td data-rotulo="Bairro">{{ oc.bairro }}</td>
+                        <td data-rotulo="Gravidade">
+                            <span class="selo selo--{{ oc.gravidade | lower }}">{{ oc.gravidade }}</span>
+                        </td>
+                        <td data-rotulo="Descrição">{{ oc.descricao }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="estado-vazio">Nenhuma ocorrência registrada ainda. Seja o primeiro a contribuir.</p>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

@@ -1,110 +1,90 @@
 """
-Buraco Zero - Sistema web simplificado para registro de ocorrências
-de buracos e falhas na pavimentação urbana.
+Buraco Zero - Sistema web colaborativo de registro de ocorrências
+na pavimentação urbana de Campo Grande/MS.
 
-Projeto Integrador de Tecnologia da Informação II
-Programa de Extensão UFMS Digital (95DX7.200525)
+Módulo 2: reconstrução da interface com Flask + HTML semântico + CSS responsivo,
+substituindo o protótipo em Streamlit do Módulo 1.
 """
 
-import os
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
-import streamlit as st
+from flask import Flask, render_template, request, redirect, url_for, flash
 
-# ---------------------------------------------------------------------------
-# Configurações gerais
-# ---------------------------------------------------------------------------
-DATA_FILE = "ocorrencias.csv"
-PONTOS_POR_REGISTRO = 10
+app = Flask(__name__)
+app.secret_key = "buraco-zero-dev-key"  # apenas para exibir mensagens flash em dev
+
+DATA_DIR = Path(__file__).parent / "data"
+DATA_FILE = DATA_DIR / "ocorrencias.csv"
 COLUNAS = ["data_hora", "bairro", "gravidade", "descricao", "pontos"]
+PONTOS_POR_REGISTRO = 10
 
-st.set_page_config(
-    page_title="Buraco Zero",
-    page_icon="🕳️",
-    layout="wide",
-)
+BAIRROS = [
+    "Centro", "Jardim dos Estados", "Vila Célia", "Monte Castelo",
+    "Amambaí", "Tiradentes", "Jardim Aeroporto", "Outro",
+]
+GRAVIDADES = ["Leve", "Média", "Grave"]
 
 
-# ---------------------------------------------------------------------------
-# Funções auxiliares
-# ---------------------------------------------------------------------------
 def carregar_dados() -> pd.DataFrame:
-    """Carrega o histórico de ocorrências salvo em CSV.
-    Caso o arquivo ainda não exista, retorna um DataFrame vazio."""
-    if os.path.exists(DATA_FILE):
-        return pd.read_csv(DATA_FILE)
-    return pd.DataFrame(columns=COLUNAS)
+    """Carrega o histórico de ocorrências do arquivo CSV local."""
+    if not DATA_FILE.exists():
+        return pd.DataFrame(columns=COLUNAS)
+    return pd.read_csv(DATA_FILE)
 
 
-def salvar_ocorrencia(bairro: str, gravidade: str, descricao: str) -> pd.DataFrame:
-    """Adiciona uma nova ocorrência ao arquivo CSV e retorna os dados atualizados."""
-    dados = carregar_dados()
-    nova_ocorrencia = {
+def salvar_ocorrencia(bairro: str, gravidade: str, descricao: str) -> None:
+    """Acrescenta uma nova ocorrência ao CSV, atribuindo pontos de gamificação."""
+    DATA_DIR.mkdir(exist_ok=True)
+    df = carregar_dados()
+    nova_linha = {
         "data_hora": datetime.now().strftime("%d/%m/%Y %H:%M"),
-        "bairro": bairro.strip(),
+        "bairro": bairro,
         "gravidade": gravidade,
-        "descricao": descricao.strip(),
+        "descricao": descricao,
         "pontos": PONTOS_POR_REGISTRO,
     }
-    dados = pd.concat([dados, pd.DataFrame([nova_ocorrencia])], ignore_index=True)
-    dados.to_csv(DATA_FILE, index=False)
-    return dados
+    df = pd.concat([df, pd.DataFrame([nova_linha])], ignore_index=True)
+    df.to_csv(DATA_FILE, index=False)
 
 
-# ---------------------------------------------------------------------------
-# Cabeçalho
-# ---------------------------------------------------------------------------
-st.title("🕳️ Buraco Zero")
-st.caption(
-    "Sistema colaborativo e gamificado para registro de ocorrências "
-    "na pavimentação das vias públicas de Campo Grande/MS."
-)
+@app.route("/", methods=["GET"])
+def index():
+    df = carregar_dados()
+    ocorrencias = df.sort_values("data_hora", ascending=False).to_dict("records")
+    total_ocorrencias = len(df)
+    pontuacao_total = int(df["pontos"].sum()) if not df.empty else 0
+    por_gravidade = (
+        df["gravidade"].value_counts().reindex(GRAVIDADES, fill_value=0).to_dict()
+        if not df.empty
+        else {g: 0 for g in GRAVIDADES}
+    )
+    return render_template(
+        "index.html",
+        bairros=BAIRROS,
+        gravidades=GRAVIDADES,
+        ocorrencias=ocorrencias,
+        total_ocorrencias=total_ocorrencias,
+        pontuacao_total=pontuacao_total,
+        por_gravidade=por_gravidade,
+    )
 
-coluna_formulario, coluna_dados = st.columns([1, 2])
 
-# ---------------------------------------------------------------------------
-# Formulário de registro (coluna esquerda)
-# ---------------------------------------------------------------------------
-with coluna_formulario:
-    st.subheader("Registrar ocorrência")
+@app.route("/registrar", methods=["POST"])
+def registrar():
+    bairro = request.form.get("bairro", "").strip()
+    gravidade = request.form.get("gravidade", "").strip()
+    descricao = request.form.get("descricao", "").strip()
 
-    with st.form("form_ocorrencia", clear_on_submit=True):
-        bairro = st.text_input("Bairro ou endereço aproximado")
-        gravidade = st.selectbox("Nível de gravidade", ["Leve", "Média", "Grave"])
-        descricao = st.text_area("Descrição do problema")
-        enviado = st.form_submit_button("Registrar ocorrência")
+    if not bairro or not gravidade or not descricao:
+        flash("Preencha todos os campos para registrar a ocorrência.", "erro")
+        return redirect(url_for("index"))
 
-    if enviado:
-        if not bairro.strip() or not descricao.strip():
-            st.warning("Preencha o bairro e a descrição antes de enviar.")
-        else:
-            salvar_ocorrencia(bairro, gravidade, descricao)
-            st.success(
-                f"Ocorrência registrada com sucesso! "
-                f"Você ganhou {PONTOS_POR_REGISTRO} pontos."
-            )
-            st.rerun()
+    salvar_ocorrencia(bairro, gravidade, descricao)
+    flash("Ocorrência registrada com sucesso. Obrigado por contribuir!", "sucesso")
+    return redirect(url_for("index"))
 
-# ---------------------------------------------------------------------------
-# Visualização dos dados (coluna direita)
-# ---------------------------------------------------------------------------
-with coluna_dados:
-    st.subheader("Ocorrências registradas")
-    dados = carregar_dados()
 
-    if dados.empty:
-        st.info("Nenhuma ocorrência registrada até o momento.")
-    else:
-        st.dataframe(dados, use_container_width=True, hide_index=True)
-
-        total_pontos = int(dados["pontos"].sum())
-        total_ocorrencias = len(dados)
-
-        metrica1, metrica2 = st.columns(2)
-        metrica1.metric("Ocorrências registradas", total_ocorrencias)
-        metrica2.metric("Pontuação total da comunidade", total_pontos)
-
-        st.markdown("**Ocorrências por gravidade**")
-        st.bar_chart(dados["gravidade"].value_counts())
-
+if __name__ == "__main__":
+    app.run(debug=True)
