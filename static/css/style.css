@@ -344,6 +344,44 @@ textarea { resize: vertical; }
     color: var(--cinza-meio-fio);
 }
 
+/* Ações da tabela (editar/remover) */
+.celula-acoes {
+    white-space: nowrap;
+}
+
+.form-inline {
+    display: inline;
+}
+
+.link-acao {
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--azul-transito);
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+    margin-right: 0.75rem;
+}
+
+.link-acao--remover {
+    color: var(--vermelho-grave);
+}
+
+.link-voltar {
+    display: inline-block;
+    margin-top: 1rem;
+    color: var(--concreto-escuro);
+    font-size: 0.9rem;
+}
+
+.layout--simples {
+    grid-template-columns: minmax(0, 28rem);
+    justify-content: start;
+}
+
 /* Rodapé */
 .site-footer {
     background: var(--asfalto);

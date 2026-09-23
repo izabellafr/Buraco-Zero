@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Buraco Zero — Editar ocorrência{% endblock %}
+
+{% block content %}
+<div class="layout layout--simples">
+    <section class="painel-registro" aria-labelledby="titulo-editar">
+        <h2 id="titulo-editar">Editar ocorrência</h2>
+        <p class="painel-registro__ajuda">
+            Atualize o nível de gravidade ou a descrição desta ocorrência.
+        </p>
+
+        <form action="{{ url_for('atualizar', ocorrencia_id=ocorrencia.id) }}" method="post" novalidate>
+            <fieldset class="campo">
+                <legend>Nível de gravidade</legend>
+                {% for g in gravidades %}
+                    <label class="opcao-radio">
+                        <input type="radio" name="gravidade" value="{{ g }}"
+                               {% if ocorrencia.gravidade == g %}checked{% endif %} required>
+                        <span>{{ g }}</span>
+                    </label>
+                {% endfor %}
+            </fieldset>
+
+            <div class="campo">
+                <label for="descricao">Descrição do problema</label>
+                <textarea id="descricao" name="descricao" rows="4" required>{{ ocorrencia.descricao }}</textarea>
+            </div>
+
+            <button type="submit" class="botao-primario">Salvar alterações</button>
+        </form>
+
+        <a href="{{ url_for('index') }}" class="link-voltar">Voltar sem salvar</a>
+    </section>
+</div>
+{% endblock %}

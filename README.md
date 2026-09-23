@@ -8,81 +8,78 @@ Tecnologia da Informação II.
 
 ## Sobre o projeto
 
-No **Módulo 1** (Resolução de problemas e análise de requisitos), o protótipo
-foi desenvolvido em **Python + Streamlit**, priorizando velocidade de
-validação da ideia sem escrever HTML/CSS.
-
-No **Módulo 2** (Desenvolvimento web com frameworks e HTML/CSS), a aplicação
-foi reconstruída em **Flask**, com páginas HTML semânticas e acessíveis e
-estilização CSS responsiva escrita manualmente, atendendo aos requisitos de
-estruturação, acessibilidade e responsividade do módulo.
+- **Módulo 1** (Resolução de problemas e análise de requisitos): protótipo em
+  **Python + Streamlit**, sem controle sobre HTML/CSS, dados salvos em CSV.
+- **Módulo 2** (Desenvolvimento web com frameworks e HTML/CSS): reconstrução
+  em **Flask**, com HTML semântico e CSS responsivo, dados ainda em CSV.
+- **Módulo 3** (Banco de Dados e Controle de versão): o armazenamento em CSV
+  foi substituído por um **banco de dados relacional SQLite**, com duas
+  entidades (`bairros` e `ocorrencias`) relacionadas por chave estrangeira,
+  e a aplicação passou a suportar inserção, consulta, atualização e remoção
+  de ocorrências via SQL. O código foi versionado com **Git** e publicado
+  no GitHub com commits organizados e descritivos.
 
 ## Tecnologias utilizadas
 
-- **Python 3** — lógica da aplicação
-- **Flask** — framework web (rotas, templates, formulários)
-- **Jinja2** — motor de templates HTML
-- **Pandas** — manipulação dos dados tabulares
-- **CSS3** (Flexbox, Grid, media queries) — estilização responsiva, sem frameworks de CSS
-- **CSV** — armazenamento local dos registros
+- **Python 3** e **Flask** — lógica da aplicação e rotas
+- **SQLite** — banco de dados relacional (via módulo `sqlite3`, nativo do Python)
+- **SQL** — criação do esquema e manipulação de dados (`CREATE TABLE`, `INSERT`,
+  `SELECT` com `JOIN`, `UPDATE`, `DELETE`)
+- **Jinja2** — templates HTML
+- **CSS3** — estilização responsiva
+- **Git e GitHub** — controle de versão
 
 ## Estrutura de arquivos
 
 ```
 buraco-zero/
-├── app.py                     # aplicação Flask: rotas e lógica de dados
-├── requirements.txt           # dependências do projeto
-├── data/
-│   └── ocorrencias.csv        # armazenamento local das ocorrências
+├── app.py             # rotas Flask (registrar, editar, atualizar, remover)
+├── database.py         # todas as operações SQL (inserção, consulta, atualização, remoção)
+├── schema.sql           # definição das tabelas, chaves primárias e estrangeiras
+├── requirements.txt
+├── buraco_zero.db        # arquivo do banco SQLite (gerado automaticamente na 1ª execução)
 ├── templates/
-│   ├── base.html               # estrutura HTML base (cabeçalho, rodapé, landmarks)
-│   └── index.html              # formulário de registro + feed de ocorrências
+│   ├── base.html
+│   ├── index.html          # formulário de registro + listagem de ocorrências
+│   └── editar.html          # formulário de edição de uma ocorrência
 └── static/
     └── css/
-        └── style.css            # estilização responsiva
+        └── style.css
 ```
+
+## Modelo de dados
+
+Duas entidades relacionadas (relacionamento um-para-muitos):
+
+- **bairros**: `id` (chave primária), `nome` (único, obrigatório)
+- **ocorrencias**: `id` (chave primária), `bairro_id` (chave estrangeira para
+  `bairros.id`), `gravidade`, `descricao`, `pontos`, `data_hora`
 
 ## Funcionalidades
 
-- Formulário de registro de ocorrências (bairro, gravidade, descrição)
-- Validação de campos obrigatórios no servidor
-- Listagem das ocorrências registradas em tabela (responsiva em telas pequenas)
-- Indicadores: total de ocorrências e pontuação acumulada da comunidade
-- Gráfico de barras (CSS puro) por nível de gravidade
-- Gamificação simples: pontuação fixa por ocorrência registrada
-- HTML semântico com landmarks (`header`, `main`, `footer`), `fieldset`/`legend`,
-  rótulos associados a campos, link de "pular para o conteúdo" e foco visível
-  para navegação por teclado
+- Registro de ocorrências associadas a um bairro cadastrado
+- Listagem das ocorrências com indicadores (total e pontuação da comunidade)
+- Gráfico por nível de gravidade
+- **Edição** de uma ocorrência já registrada (gravidade e descrição)
+- **Remoção** de uma ocorrência, com confirmação
+- Validação de campos obrigatórios e uso de parâmetros SQL (proteção contra injeção de SQL)
 
 ## Como executar localmente
 
-1. Clone o repositório:
-   ```bash
-   git clone https://github.com/izabellafr/Buraco-Zero.git
-   cd Buraco-Zero
-   ```
+```bash
+git clone https://github.com/izabellafr/Buraco-Zero.git
+cd Buraco-Zero
+pip install -r requirements.txt
+python app.py
+```
 
-2. (Opcional, recomendado) crie um ambiente virtual:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate   # Windows: venv\Scripts\activate
-   ```
-
-3. Instale as dependências:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Execute a aplicação:
-   ```bash
-   python app.py
-   ```
-
-5. Acesse no navegador: [http://localhost:5000](http://localhost:5000)
+Acesse [http://localhost:5000](http://localhost:5000). O banco de dados
+(`buraco_zero.db`) e os bairros iniciais são criados automaticamente na
+primeira execução.
 
 ## Próximos passos
 
 - Upload de fotos das ocorrências
 - Identificação do usuário e ranking individual de pontuação
 - Geolocalização automática e mapa interativo
-- Migração do armazenamento em CSV para um banco de dados relacional
+- Migração para um banco de dados em nuvem (PostgreSQL) caso o projeto escale
