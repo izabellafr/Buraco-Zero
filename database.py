@@ -52,21 +52,24 @@ def listar_bairros():
 
 def inserir_ocorrencia(bairro_id: int, gravidade: str, descricao: str):
     conexao = conectar()
-    conexao.execute(
-        """
-        INSERT INTO ocorrencias (bairro_id, gravidade, descricao, pontos, data_hora)
-        VALUES (?, ?, ?, ?, ?)
-        """,
-        (
-            bairro_id,
-            gravidade,
-            descricao,
-            PONTOS_POR_REGISTRO,
-            datetime.now().strftime("%d/%m/%Y %H:%M"),
-        ),
-    )
-    conexao.commit()
-    conexao.close()
+    try:
+        conexao.execute(
+            """
+            INSERT INTO ocorrencias (bairro_id, gravidade, descricao, pontos, data_hora)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                bairro_id,
+                gravidade,
+                descricao,
+                PONTOS_POR_REGISTRO,
+                datetime.now().strftime("%d/%m/%Y %H:%M"),
+            ),
+        )
+        conexao.commit()
+    finally:
+        # Fecha a conexão mesmo que o SQLite recuse o dado (ex.: chave estrangeira)
+        conexao.close()
 
 
 def listar_ocorrencias():
@@ -96,19 +99,23 @@ def obter_ocorrencia(ocorrencia_id: int):
 
 def atualizar_ocorrencia(ocorrencia_id: int, gravidade: str, descricao: str):
     conexao = conectar()
-    conexao.execute(
-        "UPDATE ocorrencias SET gravidade = ?, descricao = ? WHERE id = ?",
-        (gravidade, descricao, ocorrencia_id),
-    )
-    conexao.commit()
-    conexao.close()
+    try:
+        conexao.execute(
+            "UPDATE ocorrencias SET gravidade = ?, descricao = ? WHERE id = ?",
+            (gravidade, descricao, ocorrencia_id),
+        )
+        conexao.commit()
+    finally:
+        conexao.close()
 
 
 def remover_ocorrencia(ocorrencia_id: int):
     conexao = conectar()
-    conexao.execute("DELETE FROM ocorrencias WHERE id = ?", (ocorrencia_id,))
-    conexao.commit()
-    conexao.close()
+    try:
+        conexao.execute("DELETE FROM ocorrencias WHERE id = ?", (ocorrencia_id,))
+        conexao.commit()
+    finally:
+        conexao.close()
 
 
 def totais():
